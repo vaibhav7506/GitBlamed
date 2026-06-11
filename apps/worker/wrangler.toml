@@ -1,0 +1,16 @@
+name = "gitblamed-worker"
+main = "src/index.ts"
+compatibility_date = "2026-06-10"
+
+[[kv_namespaces]]
+binding = "ROAST_CACHE"
+id = "0efec2fb209d4d0bbe830b2a4ab55e0e"
+preview_id = "aeb2222c7fc24177862a15261aaa1c5d"
+
+[vars]
+APP_ORIGIN = "http://127.0.0.1:5174"
+
+[[rules]]
+type = "Data"
+globs = ["**/*.woff"]
+fallthrough = true

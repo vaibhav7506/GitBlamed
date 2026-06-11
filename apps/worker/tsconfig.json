@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["@cloudflare/workers-types", "vitest/globals"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "react"
+  },
+  "include": ["src"]
+}

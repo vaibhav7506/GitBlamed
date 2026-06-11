@@ -1,0 +1,18 @@
+{
+  "name": "gitblamed",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.12.1",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @gitblamed/web --filter @gitblamed/worker dev",
+    "dev:web": "pnpm --filter @gitblamed/web dev",
+    "dev:worker": "pnpm --filter @gitblamed/worker dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}

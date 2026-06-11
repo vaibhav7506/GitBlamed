@@ -1,0 +1,1441 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+.gitignore
+apps/web/index.html
+apps/web/package.json
+apps/web/src/components/HeatmapView.tsx
+apps/web/src/components/RoastDisplay.tsx
+apps/web/src/components/ShareCard.tsx
+apps/web/src/components/SkeletonLoader.tsx
+apps/web/src/hooks/useTypewriter.ts
+apps/web/src/lib/api.ts
+apps/web/src/main.tsx
+apps/web/src/store/useRoastStore.ts
+apps/web/src/styles.css
+apps/web/tsconfig.json
+apps/web/vite.config.ts
+apps/worker/.dev.vars.example
+apps/worker/package.json
+apps/worker/src/components/ShareCard.tsx
+apps/worker/src/index.ts
+apps/worker/src/routes/roast.ts
+apps/worker/src/services/ai.ts
+apps/worker/src/services/cache.ts
+apps/worker/src/services/github.ts
+apps/worker/src/services/parser.test.ts
+apps/worker/src/services/parser.ts
+apps/worker/src/services/shareImage.ts
+apps/worker/src/types.ts
+apps/worker/src/woff.ts
+apps/worker/tsconfig.json
+apps/worker/wrangler.toml
+package.json
+packages/types/package.json
+packages/types/src/index.ts
+packages/types/tsconfig.json
+pnpm-workspace.yaml
+tsconfig.base.json
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path=".gitignore">
+node_modules
+dist
+.wrangler
+.dev.vars
+*.local
+coverage
+.codex/logs
+*.tsbuildinfo
+</file>
+
+<file path="apps/web/index.html">
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GitBlamed — Your GitHub activity, judged</title>
+    <meta name="description" content="Enter any GitHub username and get a brutally honest AI roast of their coding habits." />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="GitBlamed — Your GitHub activity, judged" />
+    <meta property="og:description" content="One handle. One heatmap. Three sentences of judgment." />
+    <meta property="og:image" content="https://gitblamed.dev/og-default.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="GitBlamed — Your GitHub activity, judged" />
+    <meta name="twitter:description" content="One handle. One heatmap. Three sentences of judgment." />
+    <meta name="twitter:image" content="https://gitblamed.dev/og-default.png" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+</file>
+
+<file path="apps/web/package.json">
+{
+  "name": "@gitblamed/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc -b && vite build",
+    "typecheck": "tsc -b",
+    "test": "echo \"No web tests yet\"",
+    "lint": "tsc -b"
+  },
+  "dependencies": {
+    "@gitblamed/types": "workspace:*",
+    "@tailwindcss/vite": "^4.1.8",
+    "lucide-react": "^0.513.0",
+    "react": "^19.1.0",
+    "react-activity-calendar": "^2.7.8",
+    "react-dom": "^19.1.0",
+    "zustand": "^5.0.5"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.5",
+    "@vitejs/plugin-react": "^4.5.2",
+    "tailwindcss": "^4.1.8",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5"
+  }
+}
+</file>
+
+<file path="apps/web/src/components/HeatmapView.tsx">
+import ActivityCalendar from "react-activity-calendar";
+import type { DayData } from "@gitblamed/types";
+
+interface HeatmapViewProps {
+  days: DayData[];
+}
+
+export function HeatmapView({ days }: HeatmapViewProps) {
+  const data = days.map((day) => ({
+    date: day.date,
+    count: day.count,
+    level: getLevel(day.count),
+  }));
+
+  return (
+    <div className="overflow-x-auto rounded-md border border-white/10 bg-[#0d1117] p-4">
+      <ActivityCalendar
+        data={data}
+        blockMargin={4}
+        blockRadius={3}
+        blockSize={13}
+        colorScheme="dark"
+        fontSize={12}
+        hideColorLegend
+        hideMonthLabels={false}
+        theme={{
+          dark: ["#161b22", "#0e4429", "#006d32", "#26a641", "#39d353"],
+          light: ["#ebedf0", "#9be9a8", "#40c463", "#30a14e", "#216e39"],
+        }}
+      />
+    </div>
+  );
+}
+
+function getLevel(count: number): 0 | 1 | 2 | 3 | 4 {
+  if (count === 0) return 0;
+  if (count <= 3) return 1;
+  if (count <= 6) return 2;
+  if (count <= 9) return 3;
+  return 4;
+}
+</file>
+
+<file path="apps/web/src/components/RoastDisplay.tsx">
+import type { ContribStats } from "@gitblamed/types";
+import { useTypewriter } from "../hooks/useTypewriter";
+
+interface RoastDisplayProps {
+  roastText: string;
+  stats: ContribStats;
+}
+
+export function RoastDisplay({ roastText, stats }: RoastDisplayProps) {
+  const typed = useTypewriter(roastText);
+
+  return (
+    <section className="grid gap-5 lg:grid-cols-[1fr_320px]">
+      <div className="rounded-md border border-emerald-400/20 bg-emerald-400/[0.06] p-5">
+        <p className="min-h-36 text-pretty text-xl font-semibold leading-8 text-[#e6edf3] md:text-2xl md:leading-9">
+          {typed}
+          <span className="ml-1 inline-block h-6 w-2 translate-y-1 animate-pulse bg-emerald-300" />
+        </p>
+      </div>
+      <dl className="grid grid-cols-2 gap-3 rounded-md border border-white/10 bg-white/[0.04] p-4 text-sm">
+        <Stat label="Total" value={stats.totalContributions.toLocaleString()} />
+        <Stat label="Streak" value={`${stats.longestStreak}d`} />
+        <Stat label="Zero days" value={stats.zeroDays.toString()} />
+        <Stat label="Peak" value={stats.peakMonth} />
+        <Stat
+            label="Pattern"
+            value={
+            stats.weekendVsWeekday.charAt(0).toUpperCase() +
+            stats.weekendVsWeekday.slice(1)
+          }
+        />
+        <Stat label="Avg active" value={stats.avgPerActiveDay.toString()} />
+      </dl>
+    </section>
+  );
+  
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-xs uppercase tracking-[0.14em] text-[#8b949e]">{label}</dt>
+      <dd className="mt-1 truncate text-lg font-bold text-white">{value}</dd>
+    </div>
+  );
+}
+</file>
+
+<file path="apps/web/src/components/ShareCard.tsx">
+import { Copy, Download, Share2 } from "lucide-react";
+import { shareImageUrl } from "../lib/api";
+
+interface ShareCardProps {
+  username: string;
+  roastText: string;
+}
+
+export function ShareCard({ username, roastText }: ShareCardProps) {
+  const imageUrl = shareImageUrl(username);
+
+  async function copyLink() {
+    await navigator.clipboard.writeText(
+      `${window.location.origin}/u/${username}`
+    );
+  }
+
+  function openShare() {
+    const shareUrl = `${window.location.origin}/u/${username}`;
+    const text = encodeURIComponent(
+      `${roastText}\n\nSee your verdict: ${shareUrl}`
+    );
+    window.open(
+      `https://twitter.com/intent/tweet?text=${text}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  }
+ return (
+    <div className="flex flex-wrap items-center gap-3">
+      <button
+        className="inline-flex h-11 items-center gap-2 rounded-md bg-[#f78166] px-4 font-bold text-[#0d1117] transition hover:bg-[#ffa28b]"
+        onClick={openShare}
+        type="button"
+      >
+        <Share2 size={18} />
+        Share
+      </button>
+      <a
+        className="inline-flex h-11 items-center gap-2 rounded-md border border-white/12 px-4 font-semibold text-[#e6edf3] transition hover:bg-white/8"
+        href={imageUrl}
+        download={`${username}-gitblamed.svg`}
+      >
+        <Download size={18} />
+        SVG
+      </a>
+      <button
+        className="inline-flex h-11 items-center gap-2 rounded-md border border-white/12 px-4 font-semibold text-[#e6edf3] transition hover:bg-white/8"
+        onClick={copyLink}
+        type="button"
+      >
+        <Copy size={18} />
+        Copy link
+      </button>
+    </div>
+  );
+}
+</file>
+
+<file path="apps/web/src/components/SkeletonLoader.tsx">
+export function SkeletonLoader() {
+  return (
+    <div className="space-y-5" aria-label="Loading contribution report">
+      <div className="flex gap-1 overflow-hidden rounded-md border border-white/8 bg-white/[0.03] p-4">
+        {Array.from({ length: 52 }).map((_, week) => (
+          <div className="flex flex-col gap-1" key={week}>
+            {Array.from({ length: 7 }).map((__, day) => (
+              <div
+                className="h-3 w-3 animate-pulse rounded-[3px] bg-white/10"
+                key={`${week}-${day}`}
+                style={{ animationDelay: `${(week + day) * 18}ms` }}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+      <div className="space-y-3">
+        <div className="h-5 w-11/12 animate-pulse rounded bg-white/10" />
+        <div className="h-5 w-9/12 animate-pulse rounded bg-white/10" />
+        <div className="h-5 w-7/12 animate-pulse rounded bg-white/10" />
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="apps/web/src/hooks/useTypewriter.ts">
+import { useEffect, useState } from "react";
+
+export function useTypewriter(text: string, delay = 18): string {
+  const [output, setOutput] = useState("");
+
+  useEffect(() => {
+    setOutput("");
+    if (!text) return;
+
+    let index = 0;
+    const timer = window.setInterval(() => {
+      index += 1;
+      setOutput(text.slice(0, index));
+      if (index >= text.length) {
+        window.clearInterval(timer);
+      }
+    }, delay);
+
+    return () => window.clearInterval(timer);
+  }, [delay, text]);
+
+  return output;
+}
+</file>
+
+<file path="apps/web/src/lib/api.ts">
+import type { ApiError, RoastResponse } from "@gitblamed/types";
+
+export async function fetchRoast(username: string): Promise<RoastResponse> {
+  const response = await fetch(`/api/roast/${encodeURIComponent(username)}`);
+  const json = (await response.json()) as RoastResponse | ApiError;
+
+  if (!response.ok || "error" in json) {
+    throw new Error("error" in json ? json.error : "Unable to roast this profile.");
+  }
+
+  return json;
+}
+
+export function shareImageUrl(username: string): string {
+  return `/api/share/${encodeURIComponent(username)}.svg`;
+}
+</file>
+
+<file path="apps/web/src/main.tsx">
+import { Github, Search } from "lucide-react";
+import { StrictMode, useEffect } from "react";
+import { createRoot } from "react-dom/client";
+import { HeatmapView } from "./components/HeatmapView";
+import { RoastDisplay } from "./components/RoastDisplay";
+import { ShareCard } from "./components/ShareCard";
+import { SkeletonLoader } from "./components/SkeletonLoader";
+import { useRoastStore } from "./store/useRoastStore";
+import "./styles.css";
+
+function App() {
+  const { error, result, setUsername, status, submit, username } = useRoastStore();
+
+  useEffect(() => {
+    const preset = new URLSearchParams(window.location.search).get("u");
+    if (preset) {
+      setUsername(preset);
+    }
+  }, [setUsername]);
+
+  return (
+    <main className="min-h-screen bg-[#070a0f] text-[#e6edf3]">
+      <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-8 px-5 py-8 md:px-8">
+        <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-5">
+          <div className="flex items-center gap-3">
+            <div className="grid h-11 w-11 place-items-center rounded-md bg-emerald-400 text-[#07130b]">
+              <Github size={24} />
+            </div>
+            <div>
+              <h1 className="text-2xl font-black tracking-normal text-white md:text-3xl">GitBlamed</h1>
+              <p className="text-sm text-[#8b949e]">Annual GitHub activity, judged with affection.</p>
+            </div>
+          </div>
+          <div className="rounded-md border border-white/10 px-3 py-2 text-sm text-[#8b949e]">
+            React 19 · Hono · Cloudflare Workers
+          </div>
+        </header>
+
+        <form
+          className="grid gap-3 rounded-md border border-white/10 bg-white/[0.04] p-4 md:grid-cols-[1fr_auto]"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void submit();
+          }}
+        >
+          <label className="sr-only" htmlFor="username">
+            GitHub username
+          </label>
+          <input
+            autoCapitalize="none"
+            autoComplete="off"
+            autoCorrect="off"
+            className="h-12 min-w-0 rounded-md border border-white/10 bg-[#0d1117] px-4 text-lg font-semibold text-white outline-none transition placeholder:text-[#6e7681] focus:border-emerald-400"
+            id="username"
+            onChange={(event) => setUsername(event.target.value)}
+            placeholder="torvalds"
+            spellCheck={false}
+            value={username}
+          />
+          <button
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-emerald-400 px-5 font-black text-[#07130b] transition hover:bg-emerald-300 disabled:cursor-wait disabled:opacity-70"
+            disabled={status === "loading"}
+            type="submit"
+          >
+            <Search size={19} />
+            {status === "loading" ? "Blaming..." : "Roast"}
+          </button>
+        </form>
+
+        {error ? (
+          <div className="rounded-md border border-red-400/25 bg-red-400/10 p-4 text-red-100">{error}</div>
+        ) : null}
+
+        <section className="grid gap-6">
+          {status === "loading" ? <SkeletonLoader /> : null}
+
+          {result ? (
+            <>
+              <HeatmapView days={result.heatmapData} />
+              <RoastDisplay roastText={result.roastText} stats={result.stats} />
+              <ShareCard username={result.username} roastText={result.roastText} />
+            </>
+          ) : status !== "loading" ? (
+            <div className="grid min-h-[360px] place-items-center rounded-md border border-dashed border-white/12 bg-white/[0.02] p-8 text-center">
+              <div className="max-w-lg">
+                <p className="text-3xl font-black text-white md:text-5xl">One handle. One heatmap. Three sentences of judgment.</p>
+                <p className="mt-4 text-[#8b949e]">
+                  No signup, no ceremony, just a contribution calendar and a suspiciously specific roast.
+                </p>
+              </div>
+            </div>
+          ) : null}
+        </section>
+      </div>
+    </main>
+  );
+}
+
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+);
+</file>
+
+<file path="apps/web/src/store/useRoastStore.ts">
+import { create } from "zustand";
+import type { RoastResponse } from "@gitblamed/types";
+import { fetchRoast } from "../lib/api";
+
+type Status = "idle" | "loading" | "success" | "error";
+
+interface RoastState {
+  username: string;
+  status: Status;
+  result: RoastResponse | null;
+  error: string | null;
+  setUsername: (username: string) => void;
+  submit: () => Promise<void>;
+}
+
+export const useRoastStore = create<RoastState>((set, get) => ({
+  username: "",
+  status: "idle",
+  result: null,
+  error: null,
+  setUsername: (username) => set({ username, error: null }),
+  submit: async () => {
+    const username = get().username.trim().replace(/^@/, "");
+    if (!username) {
+      set({ status: "error", error: "Enter a GitHub handle first." });
+      return;
+    }
+
+    set({ status: "loading", error: null, username });
+
+    try {
+      const result = await fetchRoast(username);
+      set({ result, status: "success" });
+    } catch (error) {
+      set({
+        status: "error",
+        error: error instanceof Error ? error.message : "Something broke while roasting.",
+      });
+    }
+  },
+}));
+</file>
+
+<file path="apps/web/src/styles.css">
+@import "tailwindcss";
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: #070a0f;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+::selection {
+  background: #39d353;
+  color: #07130b;
+}
+</file>
+
+<file path="apps/web/tsconfig.json">
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx"
+  },
+  "include": ["src", "vite.config.ts"]
+}
+</file>
+
+<file path="apps/web/vite.config.ts">
+import tailwindcss from "@tailwindcss/vite";
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
+  server: {
+    proxy: {
+      "/api": "http://127.0.0.1:8787",
+      "/u": "http://127.0.0.1:8787",
+    },
+  },
+});
+</file>
+
+<file path="apps/worker/.dev.vars.example">
+# Copy this file to .dev.vars and fill in your real keys.
+# .dev.vars is gitignored — never commit real secrets.
+# .dev.vars.example should be committed — it documents what keys are needed.
+
+GITHUB_TOKEN=ghp_your_token_here
+GEMINI_API_KEY=AIza_your_key_here
+ANTHROPIC_API_KEY=sk-ant-your_key_here
+APP_ORIGIN=http://127.0.0.1:5174
+</file>
+
+<file path="apps/worker/package.json">
+{
+  "name": "@gitblamed/worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --port 8787",
+    "build": "wrangler deploy --dry-run --outdir dist",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "lint": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@fontsource/inter": "^5.2.8",
+    "@gitblamed/types": "workspace:*",
+    "hono": "^4.7.11",
+    "react": "^19.1.0",
+    "satori": "^0.12.2"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250607.0",
+    "@types/react": "^19.1.6",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.3",
+    "wrangler": "^4.20.0"
+  }
+}
+</file>
+
+<file path="apps/worker/src/components/ShareCard.tsx">
+import type { ContribStats, DayData } from "@gitblamed/types";
+
+const COLORS = ["#161b22", "#0e4429", "#006d32", "#26a641", "#39d353"];
+
+function getColor(count: number): string {
+  if (count === 0) return COLORS[0];
+  if (count <= 3) return COLORS[1];
+  if (count <= 6) return COLORS[2];
+  if (count <= 9) return COLORS[3];
+  return COLORS[4];
+}
+
+function chunkIntoWeeks(days: DayData[]): DayData[][] {
+  const weeks: DayData[][] = [];
+  for (let i = 0; i < days.length; i += 7) {
+    weeks.push(days.slice(i, i + 7));
+  }
+  return weeks;
+}
+
+export function buildShareCard(
+  username: string,
+  roastText: string,
+  days: DayData[],
+  stats: ContribStats,
+) {
+  const weeks = chunkIntoWeeks(days);
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        width: 1200,
+        height: 630,
+        backgroundColor: "#0d1117",
+        padding: 60,
+        justifyContent: "space-between",
+      }}
+    >
+      <div style={{ display: "flex", flexDirection: "column", rowGap: 8 }}>
+        <div style={{ fontSize: 28, color: "#8b949e", fontWeight: 400 }}>
+          {`github.com/${username}`}
+        </div>
+        <div style={{ fontSize: 20, color: "#30a14e" }}>
+          {`${stats.totalContributions} contributions · ${stats.longestStreak} day longest streak`}
+        </div>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "row", columnGap: 3 }}>
+        {weeks.map((week, weekIndex) => (
+          <div
+            key={weekIndex}
+            style={{ display: "flex", flexDirection: "column", rowGap: 3 }}
+          >
+            {week.map((day, dayIndex) => (
+              <div
+                key={dayIndex}
+                style={{
+                  width: 14,
+                  height: 14,
+                  borderRadius: 2,
+                  backgroundColor: getColor(day.count),
+                }}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+
+      <div
+        style={{
+          fontSize: 32,
+          color: "#e6edf3",
+          fontWeight: 700,
+          lineHeight: 1.35,
+          maxWidth: 1000,
+        }}
+      >
+        {`"${roastText}"`}
+      </div>
+
+      <div style={{ fontSize: 20, color: "#484f58" }}>
+        {"gitblamed.dev · roast your friends"}
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="apps/worker/src/index.ts">
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { roastRoute } from "./routes/roast";
+import type { Env } from "./types";
+
+const app = new Hono<{ Bindings: Env }>();
+
+app.use(
+  "*",
+  cors({
+    origin: (origin, c) => origin || c.env.APP_ORIGIN || "http://localhost:5173",
+    allowMethods: ["GET", "OPTIONS"],
+    allowHeaders: ["Content-Type"],
+  }),
+);
+
+app.get("/health", (c) => c.json({ ok: true }));
+app.route("/api", roastRoute);
+
+export default app;
+</file>
+
+<file path="apps/worker/src/routes/roast.ts">
+import { Hono } from "hono";
+import type { RoastResponse } from "@gitblamed/types";
+import { getCachedRoast, setCachedRoast } from "../services/cache";
+import { generateRoast } from "../services/ai";
+import { fetchContributionCalendar } from "../services/github";
+import { parseCalendar } from "../services/parser";
+import { renderShareImage } from "../services/shareImage";
+import type { Env } from "../types";
+
+const USERNAME_RE = /^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,37}[a-zA-Z0-9])?$/;
+
+export const roastRoute = new Hono<{ Bindings: Env }>();
+
+roastRoute.get("/roast/:username", async (c) => {
+  const username = c.req.param("username")?.trim() ?? "";
+
+  if (!USERNAME_RE.test(username)) {
+    return c.json({ error: "Invalid GitHub username." }, 400);
+  }
+
+  try {
+    const cached = await getCachedRoast(c.env.ROAST_CACHE, username);
+    if (cached) return c.json({ ...cached, cached: true });
+
+    const response = await generateResponse(username, c.env);
+    await setCachedRoast(c.env.ROAST_CACHE, username, response);
+    return c.json(response);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to generate roast.";
+    const status = message.toLowerCase().includes("not found") ? 404 : 500;
+    return c.json({ error: message }, status);
+  }
+});
+
+roastRoute.get("/share/:file", async (c) => 
+  {
+  const username = (c.req.param("file")?.trim() ?? "")
+    .replace(/\.png$/, "")
+    .replace(/\.svg$/, "");
+
+  if (!USERNAME_RE.test(username)) {
+    return c.json({ error: "Invalid GitHub username." }, 400);
+  }
+
+  try {
+    const cached = await getCachedRoast(c.env.ROAST_CACHE, username);
+    const data = cached ?? (await generateResponse(username, c.env));
+    if (!cached) await setCachedRoast(c.env.ROAST_CACHE, username, data);
+    return renderShareImage(data);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to generate share image.";
+    return c.json({ error: message }, 500);
+  }
+});
+
+roastRoute.get("/u/:username", async (c) => {
+  const username = c.req.param("username")?.trim() ?? "";
+  if (!USERNAME_RE.test(username)) return c.redirect("/");
+
+  const origin = c.env.APP_ORIGIN ?? "https://gitblamed.dev";
+  const imageUrl = `${origin}/api/share/${username}.svg`;
+  const title = `${username} just got GitBlamed`;
+  const description = "One handle. One heatmap. Three sentences of judgment.";
+
+  return c.html(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>${title}</title>
+  <meta property="og:title" content="${title}" />
+  <meta property="og:description" content="${description}" />
+  <meta property="og:image" content="${imageUrl}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="${title}" />
+  <meta name="twitter:description" content="${description}" />
+  <meta name="twitter:image" content="${imageUrl}" />
+  <meta http-equiv="refresh" content="0;url=/?u=${username}" />
+</head>
+<body>Redirecting...</body>
+</html>`);
+});
+
+async function generateResponse(username: string, env: Env): Promise<RoastResponse> {
+  const calendar = await fetchContributionCalendar(username, env.GITHUB_TOKEN);
+  const { days, stats } = parseCalendar(calendar);
+  const roastText = await generateRoast(stats, env);
+
+  return {
+    username,
+    heatmapData: days,
+    roastText,
+    stats,
+    cached: false,
+    generatedAt: new Date().toISOString(),
+  };
+}
+</file>
+
+<file path="apps/worker/src/services/ai.ts">
+import type { ContribStats } from "@gitblamed/types";
+import type { Env } from "../types";
+
+export async function generateRoast(stats: ContribStats, env: Env): Promise<string> {
+  if (stats.totalContributions === 0) {
+    return "Zero contributions across 365 days is less a heatmap and more a digital ghost town. Your longest streak is 0 days, which is impressively consistent in the way an unplugged monitor is consistent. Still, maintaining that level of emptiness takes a kind of minimalist discipline.";
+  }
+
+  const prompt = buildPrompt(stats);
+
+  try {
+    if (env.GEMINI_API_KEY) {
+      return await generateWithGemini(prompt, env.GEMINI_API_KEY);
+    }
+  } catch (error) {
+    console.warn("Gemini failed, falling back to Claude.", error);
+  }
+
+  try {
+    if (env.ANTHROPIC_API_KEY) {
+      return await generateWithClaude(prompt, env.ANTHROPIC_API_KEY);
+    }
+  } catch (error) {
+    console.warn("Claude failed, using deterministic fallback.", error);
+  }
+
+  return localRoast(stats);
+}
+
+export function buildPrompt(stats: ContribStats): string {
+  return `You are a brutally honest but secretly fond senior engineer at a
+code review for a developer's annual GitHub activity report.
+
+Their stats:
+- Total contributions this year: ${stats.totalContributions}
+- Longest streak: ${stats.longestStreak} days
+- Days with zero commits: ${stats.zeroDays} out of 365
+- Most active day of the week: ${stats.mostActiveDay}
+- Pattern: ${stats.weekendVsWeekday} coder
+- Peak month: ${stats.peakMonth}
+- Average commits per active day: ${stats.avgPerActiveDay}
+
+Your rules (non-negotiable):
+1. Write exactly 3 sentences. No more. No less.
+2. Mention at least 2 specific numbers from the stats above.
+3. End with a backhanded compliment.
+4. Sarcastic and witty, never cruel.
+5. Give zero advice. Zero encouragement. Only the roast.
+6. Special case: if totalContributions is 0, roast them for having a GitHub account that functions as a digital ghost town.
+
+Output plain text only. No markdown. No bullet points. No quotes.`;
+}
+
+async function generateWithGemini(prompt: string, apiKey: string): Promise<string> {
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.85, maxOutputTokens: 180 },
+      }),
+    },
+  );
+
+  if (!response.ok) throw new Error(`Gemini failed with ${response.status}.`);
+  const json = (await response.json()) as {
+    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+  };
+
+  const text = json.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+  if (!text) throw new Error("Gemini returned no text.");
+  return text;
+}
+
+async function generateWithClaude(prompt: string, apiKey: string): Promise<string> {
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 180,
+      temperature: 0.85,
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+
+  if (!response.ok) throw new Error(`Claude failed with ${response.status}.`);
+  const json = (await response.json()) as { content?: Array<{ type: string; text?: string }> };
+  const text = json.content?.find((part) => part.type === "text")?.text?.trim();
+  if (!text) throw new Error("Claude returned no text.");
+  return text;
+}
+
+function localRoast(stats: ContribStats): string {
+  return `You produced ${stats.totalContributions} contributions with a ${stats.longestStreak}-day streak, which is less "relentless shipping" and more "calendar-based suspense." With ${stats.zeroDays} quiet days and ${stats.mostActiveDay} somehow carrying the emotional burden, the heatmap has range in the way a smoke alarm has range. Still, averaging ${stats.avgPerActiveDay} commits per active day is almost professional if you squint kindly enough.`;
+}
+</file>
+
+<file path="apps/worker/src/services/cache.ts">
+import type { RoastResponse } from "@gitblamed/types";
+
+const ONE_DAY_SECONDS = 60 * 60 * 24;
+
+export async function getCachedRoast(
+  kv: KVNamespace,
+  username: string,
+): Promise<RoastResponse | null> {
+  try {
+    const cached = await kv.get<RoastResponse>(cacheKey(username), "json");
+    if (!cached) return null;
+
+    const age = Date.now() - Date.parse(cached.generatedAt);
+    if (Number.isNaN(age) || age > ONE_DAY_SECONDS * 1000) return null;
+
+    return cached;
+  } catch {
+    // KV read failed — treat as cache miss, app continues normally
+    return null;
+  }
+}
+
+export async function setCachedRoast(
+  kv: KVNamespace,
+  username: string,
+  response: RoastResponse,
+): Promise<void> {
+  try {
+    await kv.put(cacheKey(username), JSON.stringify(response), {
+      expirationTtl: ONE_DAY_SECONDS,
+    });
+  } catch {
+    // KV write failed — silent. User already has their result.
+    // The next request for this username just won't be cached. That is fine.
+  }
+}
+
+function cacheKey(username: string): string {
+  return `roast:${username.toLowerCase()}`;
+}
+</file>
+
+<file path="apps/worker/src/services/github.ts">
+interface GitHubDay {
+  contributionCount: number;
+  date: string;
+  weekday: number;
+}
+
+export interface RawCalendar {
+  totalContributions: number;
+  weeks: Array<{
+    contributionDays: GitHubDay[];
+  }>;
+}
+
+interface GitHubCalendarResponse {
+  data?: {
+    user?: {
+      contributionsCollection: {
+        contributionCalendar: RawCalendar;
+      };
+    };
+  };
+  errors?: Array<{ message: string }>;
+}
+
+const QUERY = `
+  query Contributions($login: String!, $from: DateTime!, $to: DateTime!) {
+    user(login: $login) {
+      contributionsCollection(from: $from, to: $to) {
+        contributionCalendar {
+          totalContributions
+          weeks {
+            contributionDays {
+              contributionCount
+              date
+              weekday
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+export async function fetchContributionCalendar(
+  username: string,
+  token?: string,
+): Promise<RawCalendar> {
+  if (!token) {
+    return buildDemoCalendar(username);
+  }
+
+  const to = new Date();
+  const from = new Date(to);
+  from.setUTCFullYear(to.getUTCFullYear() - 1);
+
+  const response = await fetch("https://api.github.com/graphql", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      "User-Agent": "gitblamed-worker",
+    },
+    body: JSON.stringify({
+      query: QUERY,
+      variables: {
+        login: username,
+        from: from.toISOString(),
+        to: to.toISOString(),
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`GitHub GraphQL failed with ${response.status}.`);
+  }
+
+  const json = (await response.json()) as GitHubCalendarResponse;
+
+  if (json.errors?.length) {
+    throw new Error(json.errors.map((error) => error.message).join("; "));
+  }
+
+  const calendar = json.data?.user?.contributionsCollection.contributionCalendar;
+  if (!calendar) {
+    throw new Error(`GitHub user "${username}" was not found.`);
+  }
+
+  return calendar;
+}
+
+function buildDemoCalendar(username: string): RawCalendar {
+  let seed = username.split("").reduce((sum, char) => sum + char.charCodeAt(0), 17);
+  const days: GitHubDay[] = [];
+  const today = new Date();
+  const start = new Date(today);
+  start.setUTCDate(today.getUTCDate() - 363);
+
+  for (let i = 0; i < 364; i++) {
+    seed = (seed * 1664525 + 1013904223) % 4294967296;
+    const date = new Date(start);
+    date.setUTCDate(start.getUTCDate() + i);
+    const weekday = date.getUTCDay();
+    const busyBias = weekday === 0 || weekday === 6 ? 0.42 : 0.68;
+    const active = seed / 4294967296 < busyBias;
+    const count = active ? 1 + (seed % 11) : 0;
+
+    days.push({
+      contributionCount: count,
+      date: date.toISOString().slice(0, 10),
+      weekday,
+    });
+  }
+
+  return {
+    totalContributions: days.reduce((sum, day) => sum + day.contributionCount, 0),
+    weeks: Array.from({ length: Math.ceil(days.length / 7) }, (_, index) => ({
+      contributionDays: days.slice(index * 7, index * 7 + 7),
+    })),
+  };
+}
+</file>
+
+<file path="apps/worker/src/services/parser.test.ts">
+import { describe, expect, it } from "vitest";
+import { parseCalendar } from "./parser";
+import type { RawCalendar } from "./github";
+
+describe("parseCalendar", () => {
+  it("handles a zero-contribution account", () => {
+    const calendar = makeCalendar(Array.from({ length: 365 }, () => 0));
+    const { stats } = parseCalendar(calendar);
+
+    expect(stats.totalContributions).toBe(0);
+    expect(stats.longestStreak).toBe(0);
+    expect(stats.zeroDays).toBe(365);
+    expect(stats.avgPerActiveDay).toBe(0);
+  });
+
+  it("handles a 365-day streak", () => {
+    const calendar = makeCalendar(Array.from({ length: 365 }, () => 1));
+    const { stats } = parseCalendar(calendar);
+
+    expect(stats.totalContributions).toBe(365);
+    expect(stats.longestStreak).toBe(365);
+    expect(stats.zeroDays).toBe(0);
+    expect(stats.avgPerActiveDay).toBe(1);
+  });
+
+  it("computes stats for a brand new sparse account", () => {
+    const calendar = makeCalendar([0, 0, 3, 4, 0, 2, 0]);
+    const { days, stats } = parseCalendar(calendar);
+
+    expect(days).toHaveLength(7);
+    expect(stats.totalContributions).toBe(9);
+    expect(stats.longestStreak).toBe(2);
+    expect(stats.zeroDays).toBe(4);
+    expect(stats.avgPerActiveDay).toBe(3);
+  });
+});
+
+function makeCalendar(counts: number[]): RawCalendar {
+  const start = new Date("2025-01-05T00:00:00Z");
+  const days = counts.map((count, index) => {
+    const date = new Date(start);
+    date.setUTCDate(start.getUTCDate() + index);
+
+    return {
+      contributionCount: count,
+      date: date.toISOString().slice(0, 10),
+      weekday: date.getUTCDay(),
+    };
+  });
+
+  return {
+    totalContributions: counts.reduce((sum, count) => sum + count, 0),
+    weeks: Array.from({ length: Math.ceil(days.length / 7) }, (_, index) => ({
+      contributionDays: days.slice(index * 7, index * 7 + 7),
+    })),
+  };
+}
+</file>
+
+<file path="apps/worker/src/services/parser.ts">
+import type { ContribStats, DayData } from "@gitblamed/types";
+import type { RawCalendar } from "./github";
+
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+export function parseCalendar(calendar: RawCalendar): {
+  days: DayData[];
+  stats: ContribStats;
+} {
+  const days: DayData[] = calendar.weeks.flatMap((week) =>
+    week.contributionDays.map((day) => ({
+      date: day.date,
+      count: day.contributionCount,
+      weekday: day.weekday,
+    })),
+  );
+
+  let longestStreak = 0;
+  let currentStreak = 0;
+  let zeroDays = 0;
+  let totalActive = 0;
+  let weekendTotal = 0;
+  let weekdayTotal = 0;
+  const byDay = new Array<number>(7).fill(0);
+  const byMonth = new Array<number>(12).fill(0);
+
+  for (const day of days) {
+    const month = Number.parseInt(day.date.slice(5, 7), 10) - 1;
+
+    if (day.count > 0) {
+      currentStreak++;
+      longestStreak = Math.max(longestStreak, currentStreak);
+      totalActive++;
+    } else {
+      zeroDays++;
+      currentStreak = 0;
+    }
+
+    byDay[day.weekday] += day.count;
+    byMonth[month] += day.count;
+
+    if (day.weekday === 0 || day.weekday === 6) {
+      weekendTotal += day.count;
+    } else {
+      weekdayTotal += day.count;
+    }
+  }
+
+  const peakDayIndex = byDay.indexOf(Math.max(...byDay));
+  const peakMonthIndex = byMonth.indexOf(Math.max(...byMonth));
+  const avgPerActiveDay =
+    totalActive > 0 ? Math.round(calendar.totalContributions / totalActive) : 0;
+
+  return {
+    days,
+    stats: {
+      totalContributions: calendar.totalContributions,
+      longestStreak,
+      zeroDays,
+      mostActiveDay: DAY_NAMES[peakDayIndex],
+      peakMonth: MONTH_NAMES[peakMonthIndex],
+      avgPerActiveDay,
+      weekendVsWeekday:
+        weekendTotal === weekdayTotal ? "balanced" : weekendTotal > weekdayTotal ? "weekend" : "weekday",
+    },
+  };
+}
+</file>
+
+<file path="apps/worker/src/services/shareImage.ts">
+import interRegular from "@fontsource/inter/files/inter-latin-400-normal.woff";
+import satori from "satori";
+import type { RoastResponse } from "@gitblamed/types";
+import { buildShareCard } from "../components/ShareCard";
+
+export async function renderShareImage(data: RoastResponse): Promise<Response> {
+  const svg = await satori(
+    buildShareCard(data.username, data.roastText, data.heatmapData, data.stats),
+    {
+      width: 1200,
+      height: 630,
+      fonts: [
+        {
+          name: "Inter",
+          data: interRegular,
+          weight: 400,
+          style: "normal",
+        },
+      ],
+    },
+  );
+
+  return new Response(svg, {
+    headers: {
+      "Content-Type": "image/svg+xml",
+      "Cache-Control": "public, max-age=86400",
+    },
+  });
+}
+</file>
+
+<file path="apps/worker/src/types.ts">
+export type { ApiError, ContribStats, DayData, RoastResponse } from "@gitblamed/types";
+
+export interface Env {
+  ROAST_CACHE: KVNamespace;
+  GITHUB_TOKEN?: string;
+  GEMINI_API_KEY?: string;
+  ANTHROPIC_API_KEY?: string;
+  APP_ORIGIN?: string;
+}
+</file>
+
+<file path="apps/worker/src/woff.ts">
+declare module "*.woff" {
+  const source: ArrayBuffer;
+  export default source;
+}
+</file>
+
+<file path="apps/worker/tsconfig.json">
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["@cloudflare/workers-types", "vitest/globals"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "react"
+  },
+  "include": ["src"]
+}
+</file>
+
+<file path="apps/worker/wrangler.toml">
+name = "gitblamed-worker"
+main = "src/index.ts"
+compatibility_date = "2026-06-10"
+
+[[kv_namespaces]]
+binding = "ROAST_CACHE"
+id = "0efec2fb209d4d0bbe830b2a4ab55e0e"
+preview_id = "aeb2222c7fc24177862a15261aaa1c5d"
+
+[vars]
+APP_ORIGIN = "http://localhost:5173"
+
+[[rules]]
+type = "Data"
+globs = ["**/*.woff"]
+fallthrough = true
+</file>
+
+<file path="package.json">
+{
+  "name": "gitblamed",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.12.1",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @gitblamed/web --filter @gitblamed/worker dev",
+    "dev:web": "pnpm --filter @gitblamed/web dev",
+    "dev:worker": "pnpm --filter @gitblamed/worker dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}
+</file>
+
+<file path="packages/types/package.json">
+{
+  "name": "@gitblamed/types",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "echo \"No tests for shared types\"",
+    "lint": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}
+</file>
+
+<file path="packages/types/src/index.ts">
+export type CodingPattern = "weekend" | "weekday" | "balanced";
+
+export interface DayData {
+  date: string;
+  count: number;
+  weekday: number;
+}
+
+export interface ContribStats {
+  totalContributions: number;
+  longestStreak: number;
+  zeroDays: number;
+  mostActiveDay: string;
+  weekendVsWeekday: CodingPattern;
+  peakMonth: string;
+  avgPerActiveDay: number;
+}
+
+export interface RoastResponse {
+  username: string;
+  heatmapData: DayData[];
+  roastText: string;
+  stats: ContribStats;
+  cached: boolean;
+  generatedAt: string;
+}
+
+export interface ApiError {
+  error: string;
+  details?: string;
+}
+</file>
+
+<file path="packages/types/tsconfig.json">
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "dist"
+  },
+  "include": ["src"]
+}
+</file>
+
+<file path="pnpm-workspace.yaml">
+packages:
+  - "apps/*"
+  - "packages/*"
+</file>
+
+<file path="tsconfig.base.json">
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "allowJs": false,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true
+  }
+}
+</file>
+
+</files>

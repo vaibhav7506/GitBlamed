@@ -1,0 +1,30 @@
+{
+  "name": "@gitblamed/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc -b && vite build",
+    "typecheck": "tsc -b",
+    "test": "echo \"No web tests yet\"",
+    "lint": "tsc -b"
+  },
+  "dependencies": {
+    "@gitblamed/types": "workspace:*",
+    "@tailwindcss/vite": "^4.1.8",
+    "lucide-react": "^0.513.0",
+    "react": "^19.1.0",
+    "react-activity-calendar": "^2.7.8",
+    "react-dom": "^19.1.0",
+    "zustand": "^5.0.5"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.5",
+    "@vitejs/plugin-react": "^4.5.2",
+    "tailwindcss": "^4.1.8",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5"
+  }
+}
