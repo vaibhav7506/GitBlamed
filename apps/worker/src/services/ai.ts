@@ -1,7 +1,10 @@
 import type { ContribStats } from "@gitblamed/types";
 import type { Env } from "../types";
 
-export async function generateRoast(stats: ContribStats, env: Env): Promise<string> {
+export async function generateRoast(
+  stats: ContribStats,
+  env: Env,
+): Promise<string> {
   if (stats.totalContributions === 0) {
     return "Zero contributions across 365 days is less a heatmap and more a digital ghost town. Your longest streak is 0 days, which is impressively consistent in the way an unplugged monitor is consistent. Still, maintaining that level of emptiness takes a kind of minimalist discipline.";
   }
@@ -10,35 +13,28 @@ export async function generateRoast(stats: ContribStats, env: Env): Promise<stri
 
   try {
     if (env.GROQ_API_KEY) {
-      const result = await generateWithGroq(prompt, env.GROQ_API_KEY);
-      console.log("[ai] Groq succeeded");
-      return result;
+      return await generateWithGroq(prompt, env.GROQ_API_KEY);
     }
-  } catch (error) {
-    console.error("[ai] Groq failed:", error);
+  } catch {
+    // Groq failed — fall through to next provider
   }
 
   try {
     if (env.GEMINI_API_KEY) {
-      const result = await generateWithGemini(prompt, env.GEMINI_API_KEY);
-      console.log("[ai] Gemini succeeded");
-      return result;
+      return await generateWithGemini(prompt, env.GEMINI_API_KEY);
     }
-  } catch (error) {
-    console.error("[ai] Gemini failed:", error);
+  } catch {
+    // Gemini failed — fall through to next provider
   }
 
   try {
     if (env.ANTHROPIC_API_KEY) {
-      const result = await generateWithClaude(prompt, env.ANTHROPIC_API_KEY);
-      console.log("[ai] Claude succeeded");
-      return result;
+      return await generateWithClaude(prompt, env.ANTHROPIC_API_KEY);
     }
-  } catch (error) {
-    console.error("[ai] Claude failed:", error);
+  } catch {
+    // Claude failed — fall through to deterministic local roast
   }
 
-  console.error("[ai] All providers failed — using local fallback");
   return localRoast(stats);
 }
 
@@ -64,24 +60,29 @@ Your rules (non-negotiable):
 Output plain text only. No markdown. No bullet points. No quotes.`;
 }
 
-async function generateWithGroq(prompt: string, apiKey: string): Promise<string> {
-  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`,
+async function generateWithGroq(
+  prompt: string,
+  apiKey: string,
+): Promise<string> {
+  const response = await fetch(
+    "https://api.groq.com/openai/v1/chat/completions",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        max_tokens: 180,
+        temperature: 0.85,
+        messages: [{ role: "user", content: prompt }],
+      }),
     },
-    body: JSON.stringify({
-      model: "llama-3.3-70b-versatile",
-      max_tokens: 180,
-      temperature: 0.85,
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
+  );
 
   if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Groq ${response.status}: ${body}`);
+    throw new Error(`Groq failed with ${response.status}.`);
   }
 
   const json = (await response.json()) as {
@@ -93,7 +94,10 @@ async function generateWithGroq(prompt: string, apiKey: string): Promise<string>
   return text;
 }
 
-async function generateWithGemini(prompt: string, apiKey: string): Promise<string> {
+async function generateWithGemini(
+  prompt: string,
+  apiKey: string,
+): Promise<string> {
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
     {
@@ -107,8 +111,7 @@ async function generateWithGemini(prompt: string, apiKey: string): Promise<strin
   );
 
   if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Gemini ${response.status}: ${body}`);
+    throw new Error(`Gemini failed with ${response.status}.`);
   }
 
   const json = (await response.json()) as {
@@ -120,7 +123,10 @@ async function generateWithGemini(prompt: string, apiKey: string): Promise<strin
   return text;
 }
 
-async function generateWithClaude(prompt: string, apiKey: string): Promise<string> {
+async function generateWithClaude(
+  prompt: string,
+  apiKey: string,
+): Promise<string> {
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -136,15 +142,14 @@ async function generateWithClaude(prompt: string, apiKey: string): Promise<strin
   });
 
   if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Claude ${response.status}: ${body}`);
+    throw new Error(`Claude failed with ${response.status}.`);
   }
 
   const json = (await response.json()) as {
     content?: Array<{ type: string; text?: string }>;
   };
 
-  const text = json.content?.find((p) => p.type === "text")?.text?.trim();
+  const text = json.content?.find((part) => part.type === "text")?.text?.trim();
   if (!text) throw new Error("Claude returned no text.");
   return text;
 }
