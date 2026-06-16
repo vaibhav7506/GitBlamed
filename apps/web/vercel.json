@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://gitblamed-worker.vaibhav-gitblamed.workers.dev/api/$1"
+    },
+    {
+      "source": "/u/(.*)",
+      "destination": "https://gitblamed-worker.vaibhav-gitblamed.workers.dev/u/$1"
+    }
+  ]
+}
